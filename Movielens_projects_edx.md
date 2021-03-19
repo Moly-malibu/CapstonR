@@ -3,9 +3,7 @@
 
 Title:   Movielens
 
-Author : Monica Bustamante
-
-Date:    
+Author : Monica Bustamante  
 
 Output:  PDF
 
@@ -25,6 +23,21 @@ Predict the rating of movies by users using ratings that have been collected for
 9. Model Developing Approach
 
 ## Install Packages and Libraries
+
+
+```R
+list.of.packages <- c("tidyverse", "caret","tidyr","stringr","ggplot2","readr","lubridate","stringi","lattice")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+library(tidyverse)
+library(caret)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(readr)
+library(lubridate)
+library(stringi)
+```
 
 
 ```R
@@ -333,28 +346,6 @@ edx %>% summarize(n_users = n_distinct(userId))
 
 
 ```R
-edx %>% group_by(genres) %>% 
-  summarise(n=n()) %>%
-  head()
-```
-
-
-<table>
-<thead><tr><th scope=col>genres</th><th scope=col>n</th></tr></thead>
-<tbody>
-	<tr><td>(no genres listed)                                </td><td>    6                                             </td></tr>
-	<tr><td>Action                                            </td><td>24575                                             </td></tr>
-	<tr><td>Action|Adventure                                  </td><td>68611                                             </td></tr>
-	<tr><td>Action|Adventure|Animation|Children|Comedy        </td><td> 7438                                             </td></tr>
-	<tr><td>Action|Adventure|Animation|Children|Comedy|Fantasy</td><td>  191                                             </td></tr>
-	<tr><td>Action|Adventure|Animation|Children|Comedy|IMAX   </td><td>   62                                             </td></tr>
-</tbody>
-</table>
-
-
-
-
-```R
 # str_detect
 genres = c("Drama", "Comedy", "Thriller", "Romance")
 sapply(genres, function(g) {
@@ -455,7 +446,7 @@ paste('Romance has',nrow(romance),'movies')
 'Romance has 1712232 movies'
 
 
-# 1. VARIABLE ANALYSIS BY RATING
+#  VARIABLE ANALYSIS BY RATING
 
 Find any insights to develop the recommendation model. The qualification is the classification of the information that allows it to be evaluated and valued based on a comparative evaluation of its standard quality or performance, quantity, or its combination. In the Movilens data set, the rating has a numerical ordinal scale of 0.5 to 5 stars from movie viewers. The maximum rating they give 5 stars or less if they do not like the movie.
 
@@ -655,10 +646,10 @@ rm(rating35, rating3, rating4, Result)
 ```R
 #Graphic Rating movies
 edx %>%
-	group_by(rating) %>%
-	summarize(count = n()) %>%
-	ggplot(aes(x = rating, y = count)) +
-	geom_line()
+    group_by(rating) %>%
+    summarize(count = n()) %>%
+    ggplot(aes(x = rating, y = count)) +
+    geom_line()
 ```
 
 
@@ -689,36 +680,6 @@ edx %>%
 ![png](output_57_1.png)
 
 
-# 4. MODELING
-
-# Predicted movie ratings and calculates RMSE.
-
-Movie rating predictions will be compared to the true ratings in the validation set using RMSE
-
-
-```R
-list.of.packages <- c("tidyverse", "caret","tidyr","stringr","ggplot2","readr","lubridate","stringi","lattice")
-new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
-library(tidyverse)
-library(caret)
-library(tidyr)
-library(stringr)
-library(ggplot2)
-library(readr)
-library(lubridate)
-library(stringi)
-```
-
-    
-    Attaching package: ‘lubridate’
-    
-    The following object is masked from ‘package:base’:
-    
-        date
-    
-
-
 
 ```R
 dl <- tempfile()
@@ -733,10 +694,12 @@ ratings <- read.table(text = gsub("::", "\t", readLines(unzip(dl, "ml-10M100K/ra
 
 
 ```R
+#Create DAT for graphic and see categories by genres and years
 movies <- str_split_fixed(readLines(unzip(dl, "ml-10M100K/movies.dat")), "\\::", 3)
 colnames(movies) <- c("movieId", "title", "genres")
 
-movies <- as.data.frame(movies) %>% mutate(movieId = as.numeric(levels(movieId))[movieId],
+movies <- as.data.frame(movies) %>% 
+mutate(movieId = as.numeric(levels(movieId))[movieId],
                                            title = as.character(title),
                                            genres = as.character(genres))
 
@@ -759,19 +722,9 @@ nrow(movielens)
 10000054
 
 
-# 
-
-# 
-
-# 
-
-# 
-
-# 
-
 
 ```R
-#Gender as Drama and Comedy have high rating.
+#Genres as Drama and Comedy have high rating.
 
 ggplot(DAT.aggregate,aes(x=genres,y=n))+
     geom_col(group="genres",alpha=0.8,fill ="yellow", color="white")+
@@ -780,7 +733,7 @@ theme(axis.text.x=element_text(angle = -90, hjust = 0))
 ```
 
 
-![png](output_70_0.png)
+![png](output_62_0.png)
 
 
 
@@ -795,25 +748,153 @@ plot(table(movielens$year),
 ```
 
 
-![png](output_71_0.png)
+![png](output_63_0.png)
 
+
+# MODELING
+
+# Predicted movie ratings and calculates RMSE.
+
+Movie rating predictions will be compared to the true ratings in the validation set using RMSE
 
 # Model Approach
 
 Movilens is a very large database with different variables that have different effects on ratings. Genres have a significant effect on ratings, it is required to divide compound genres into individual genres and calculate the effect of each genre using relatively more complex calculations. Some movies have a very high number of ratings, while others have very few or low ratings. Coming from small samples -few numbers of grades- can adversely affect preaching. we will use a method known as Regularization to penalize  of very high or low grades that come from small samples. Also, we will divide the edx dataset into two parts: train (80%) and test (20%), then we will use train to train the model and test to cross-validate and fit the model to get the best lambda value that results in a minimum RMSE.
 
+Created partition the data set Edx into 20% for test and 80% for training set, this step prepared the data split to create the model.
+
 
 ```R
-#Validation set will be 10% of the movieLens data
+#Validation set will be 20% of the movieLens data
 set.seed(2) #Partition dataset test and train
 test_index <- createDataPartition(y = edx$rating, times = 2, p = 0.1, list = FALSE)
-edx <- edx[-test_index,] #train set
-temp <- edx[test_index,] 
+train <- edx[-test_index,] #train set
+test <- edx[test_index,]   #test set
 ```
 
 
 ```R
-edx <- edx %>% # It extracts the release year of the movie and creates `year` column.
+#Define RMSE that mesure of how spread out thesse residuals are, or concentration the data around the linea of best fit.
+
+RMSE <- function(true_ratings, predicted_ratings){
+sqrt(mean((true_ratings - predicted_ratings)^2,na.rm =TRUE))
+}
+```
+
+
+```R
+mu <- mean(train$rating)  #mean
+
+rmse_naive <- RMSE(test$rating, mu)  #MODEL 1
+
+rmse_results <- data_frame(method='Average', RMSE=rmse_naive)
+rmse_results
+```
+
+
+<table>
+<thead><tr><th scope=col>method</th><th scope=col>RMSE</th></tr></thead>
+<tbody>
+	<tr><td>Average </td><td>1.060381</td></tr>
+</tbody>
+</table>
+
+
+
+
+```R
+#Model by Movie average
+
+mu_m2 <-  mean(train$rating) #Model 2: Y u, i =?? + b i
+movie_avgs <- train%>%
+  group_by(movieId) %>%
+  summarize(b_i=mean(rating-mu_m2))
+
+predicted_rating <- mu_m2+test%>%
+  left_join(movie_avgs, by='movieId')%>%
+  pull(b_i)
+
+rmse_m2 <- RMSE(predicted_rating, test$rating)
+rmse_results <- bind_rows(rmse_results, data_frame(method='Movie Effect Model', RMSE=rmse_m2))
+rmse_results
+```
+
+
+<table>
+<thead><tr><th scope=col>method</th><th scope=col>RMSE</th></tr></thead>
+<tbody>
+	<tr><td>Average           </td><td>1.0603807         </td></tr>
+	<tr><td>Movie Effect Model</td><td>0.9435103         </td></tr>
+</tbody>
+</table>
+
+
+
+
+```R
+#Model by User average
+
+user_avgs <- train%>%
+  left_join(movie_avgs, by='movieId') %>% # Y u, i =??+b i +?? u, i w
+  group_by(userId) %>%
+  summarize(b_u=mean(rating - mu_m2 - b_i))
+
+predicted_ratings <- test%>%
+  left_join(movie_avgs, by='movieId')%>%
+  left_join(user_avgs, by='userId')%>%
+  mutate(pred=mu_m2 + b_i + b_u)%>%
+  pull(pred)
+
+rmse_m3 <- RMSE(predicted_ratings, test$rating)
+rmse_results <- bind_rows(rmse_results, data_frame(method='Movie + User Effect Model', RMSE=rmse_m3))
+rmse_results
+```
+
+
+<table>
+<thead><tr><th scope=col>method</th><th scope=col>RMSE</th></tr></thead>
+<tbody>
+	<tr><td>Average                  </td><td>1.0603807                </td></tr>
+	<tr><td>Movie Effect Model       </td><td>0.9435103                </td></tr>
+	<tr><td>Movie + User Effect Model</td><td>0.8660346                </td></tr>
+</tbody>
+</table>
+
+
+
+# RMSE USED VALIDATION SET
+
+
+```R
+rating_vp <- validation %>%
+  left_join(movie_avgs, by = 'movieId')%>%
+  left_join(user_avgs, by='userId')%>%
+  mutate(pred=mu_m2 + b_i + b_u)%>%
+  pull(pred)
+
+validation_m3 <- RMSE(validation$rating, rating_vp)
+rmse_results <- bind_rows(rmse_results, data_frame(Method='Validation', RMSE=validation_m3))
+rmse_results
+```
+
+
+<table>
+<thead><tr><th scope=col>method</th><th scope=col>RMSE</th><th scope=col>Method</th></tr></thead>
+<tbody>
+	<tr><td>Average                  </td><td>1.0603807                </td><td>NA                       </td></tr>
+	<tr><td>Movie Effect Model       </td><td>0.9435103                </td><td>NA                       </td></tr>
+	<tr><td>Movie + User Effect Model</td><td>0.8660346                </td><td>NA                       </td></tr>
+	<tr><td>NA                       </td><td>      NaN                </td><td>Validation Final         </td></tr>
+	<tr><td>NA                       </td><td>      NaN                </td><td>Validation               </td></tr>
+	<tr><td>NA                       </td><td>0.8660346                </td><td>Validation               </td></tr>
+</tbody>
+</table>
+
+
+
+
+```R
+edx <- train %>% # It extracts the release year of the movie.
   mutate(title = str_trim(title)) %>%
   extract(title, c("title_tmp", "year"),
           regex = "^(.*) \\(([0-9 \\-]*)\\)$",
@@ -826,7 +907,7 @@ edx <- edx %>% # It extracts the release year of the movie and creates `year` co
   select(-title_tmp)  %>%
   mutate(genres = if_else(genres == "(no genres listed)",
                           `is.na<-`(genres), genres))
-validation <- temp %>% 
+validation <- test %>% 
   semi_join(edx, by = "movieId") %>%
   semi_join(edx, by = "userId")
 ```
@@ -842,50 +923,35 @@ lambdas <- seq(0, 5, 0.25)
 rmses <- sapply(lambdas,function(l){
   
   #Mean of ratings from the edx training set
-  mu <- mean(edx$rating)
+  mu <- mean(train$rating)
   
   #Adjust mean by movie effect and penalize low number on ratings
-  b_i <- edx %>% 
+  b_i <- train %>% 
     group_by(movieId) %>%
     summarize(b_i = sum(rating - mu)/(n()+l))
   
   #Adjdust mean by user and movie effect and penalize low number of ratings
-  b_u <- edx %>% 
+  b_u <- train %>% 
     left_join(b_i, by="movieId") %>%
     group_by(userId) %>%
     summarize(b_u = sum(rating - b_i - mu)/(n()+l))
   
   #Predict ratings in the training set to derive optimal penalty value 'lambda'
   predicted_ratings <- 
-    edx %>% 
+    train %>% 
     left_join(b_i, by = "movieId") %>%
     left_join(b_u, by = "userId") %>%
     mutate(pred = mu + b_i + b_u) %>%
     .$pred
   
-  return(RMSE(predicted_ratings, edx$rating))
+  return(RMSE(predicted_ratings, train$rating))
 })
-plot(lambdas, rmses,
+plot(lambdas, rmses, #Graphic
     col = "blue")
 ```
 
 
-![png](output_76_0.png)
-
-
-
-```R
-movie_avgs <- edx
-```
-
-
-```R
-lambda <- lambdas[which.min(rmses)]
-paste('Optimal RMSE of',min(rmses),'is achieved with Lambda',lambda)
-```
-
-
-'Optimal RMSE of 0.85574776502364 is achieved with Lambda 0.5'
+![png](output_77_0.png)
 
 
 
@@ -919,10 +985,7 @@ predicted_ratings <-
   return(predicted_ratings)
   
 })
-```
-
-
-```R
+#Plot Linear, where we can see that the movies before 2000 are preferred for the customers.
 avg_ratings <- edx %>% 
 group_by(year) %>% 
 summarise(avg_rating = mean(rating))
@@ -930,7 +993,7 @@ plot(avg_ratings)
 ```
 
 
-![png](output_80_0.png)
+![png](output_78_0.png)
 
 
 
@@ -958,7 +1021,7 @@ edx %>% mutate(date = date(as_datetime(timestamp, origin="1990-01-01"))) %>%
   group_by(date, title) %>%
   summarise(count = n()) %>%
   arrange(-count) %>%
-  head(10)
+  head(25)
 ```
 
     `summarise()` has grouped output by 'date'. You can override using the `.groups` argument.
@@ -968,16 +1031,31 @@ edx %>% mutate(date = date(as_datetime(timestamp, origin="1990-01-01"))) %>%
 <table>
 <thead><tr><th scope=col>date</th><th scope=col>title</th><th scope=col>count</th></tr></thead>
 <tbody>
-	<tr><td>2018-05-22                                           </td><td>Chasing Amy                                          </td><td>266                                                  </td></tr>
-	<tr><td>2020-11-20                                           </td><td>American Beauty                                      </td><td>215                                                  </td></tr>
-	<tr><td>2019-12-11                                           </td><td>Star Wars: Episode IV - A New Hope (a.k.a. Star Wars)</td><td>202                                                  </td></tr>
-	<tr><td>2019-12-11                                           </td><td>Star Wars: Episode V - The Empire Strikes Back       </td><td>200                                                  </td></tr>
-	<tr><td>2025-03-22                                           </td><td>Lord of the Rings: The Two Towers, The               </td><td>197                                                  </td></tr>
-	<tr><td>2019-12-11                                           </td><td>Star Wars: Episode VI - Return of the Jedi           </td><td>189                                                  </td></tr>
-	<tr><td>2025-03-22                                           </td><td>Lord of the Rings: The Fellowship of the Ring, The   </td><td>177                                                  </td></tr>
-	<tr><td>2020-11-20                                           </td><td>Jurassic Park                                        </td><td>173                                                  </td></tr>
-	<tr><td>2020-11-20                                           </td><td>Terminator 2: Judgment Day                           </td><td>170                                                  </td></tr>
-	<tr><td>2019-12-11                                           </td><td>Matrix, The                                          </td><td>169                                                  </td></tr>
+	<tr><td>2018-05-22                                                             </td><td>Chasing Amy                                                            </td><td>266                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>American Beauty                                                        </td><td>215                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Star Wars: Episode IV - A New Hope (a.k.a. Star Wars)                  </td><td>202                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Star Wars: Episode V - The Empire Strikes Back                         </td><td>200                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Lord of the Rings: The Two Towers, The                                 </td><td>197                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Star Wars: Episode VI - Return of the Jedi                             </td><td>189                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Lord of the Rings: The Fellowship of the Ring, The                     </td><td>177                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Jurassic Park                                                          </td><td>173                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Terminator 2: Judgment Day                                             </td><td>170                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Matrix, The                                                            </td><td>169                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Men in Black                                                           </td><td>167                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Shrek                                                                  </td><td>158                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Star Wars: Episode IV - A New Hope (a.k.a. Star Wars)                  </td><td>157                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Star Wars: Episode V - The Empire Strikes Back                         </td><td>154                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Matrix, The                                                            </td><td>151                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark)</td><td>150                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Saving Private Ryan                                                    </td><td>150                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Star Wars: Episode VI - Return of the Jedi                             </td><td>150                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Saving Private Ryan                                                    </td><td>146                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>E.T. the Extra-Terrestrial                                             </td><td>145                                                                    </td></tr>
+	<tr><td>2019-12-11                                                             </td><td>Godfather, The                                                         </td><td>145                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Fight Club                                                             </td><td>145                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Matrix, The                                                            </td><td>143                                                                    </td></tr>
+	<tr><td>2020-11-20                                                             </td><td>Braveheart                                                             </td><td>142                                                                    </td></tr>
+	<tr><td>2025-03-22                                                             </td><td>Shawshank Redemption, The                                              </td><td>140                                                                    </td></tr>
 </tbody>
 </table>
 
@@ -985,4 +1063,4 @@ edx %>% mutate(date = date(as_datetime(timestamp, origin="1990-01-01"))) %>%
 
 # CONCLUSION
 
-RMSE, root-mean-square deviation, model that was used to predict from a list of rated movies, and discovers patterns. It was determined which movies viewers prefer, with a medium to high rating. (3 to 5). The films preferred by the clients were those produced from the periods 1980 and 1990 with a maximum rating of 4. The model yielded an accuracy of 85%, highlighting that the larger the sample size increases the accuracy or precision of the model and vice versa.
+RMSE, root-mean-square deviation, model that was used to predict from a list of rated movies, and discovers patterns. It was determined which movies viewers prefer, with a medium to high rating. (3 to 4). The films preferred by the clients were those produced from the periods 1980 and 1990 with a maximum rating of 4. The model yielded an accuracy of 86%, highlighting that the larger the sample size increases the accuracy or precision of the model and vice versa.
